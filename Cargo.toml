@@ -1,0 +1,23 @@
+[package]
+name = "esp_gateway"
+version = "0.1.0"
+authors = ["Nereuxofficial <nereux@tuta.io>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+hal = { package = "esp32c3-hal", version = "0.9.0" }
+esp-backtrace = { version = "0.7.0", features = ["esp32c3", "panic-handler", "exception-handler", "print-uart"] }
+esp-println       = { version = "0.5.0", features = ["esp32c3"] }
+esp-wifi = { git="https://github.com/esp-rs/esp-wifi", features = ["esp32c3", "esp-now"] }
+esp-alloc = "0.3.0"
+postcard = "1.0.4"
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+[profile.dev.package.esp-wifi]
+opt-level = 3
+
+[profile.dev]
+lto = "off"
+
+[profile.release]
+lto = "off"
