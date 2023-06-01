@@ -24,17 +24,7 @@ struct SensorData {
     controller: [char; 32],
     sensors: Vec<Data>,
 }
-impl SensorData {
-    fn new(controller: [char; 32]) -> Self {
-        Self {
-            controller,
-            sensors: vec![],
-        }
-    }
-    fn add_data(&mut self, data: Data) {
-        self.sensors.push(data);
-    }
-}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Data {
     r#type: String,
@@ -91,7 +81,9 @@ fn main() -> ! {
         if let Some(r) = r {
             println!("Received: {:x?}", r);
             let decoded_data: SensorData = postcard::from_bytes(&r.data).unwrap();
-            println!("Decoded: {:?}", decoded_data);
+            if let Ok(json_serialized) = serde_json::to_string(&decoded_data) {
+                println!("Decoded: {}", json_serialized);
+            }
             if r.info.dst_address == BROADCAST_ADDRESS {
                 if !esp_now.peer_exists(&r.info.src_address).unwrap() {
                     esp_now
@@ -105,5 +97,6 @@ fn main() -> ! {
                 }
             }
         }
+        // Since our data is deallocated here we do not have to worry about the heap growing.
     }
 }

@@ -13,6 +13,8 @@ esp-wifi = { git="https://github.com/esp-rs/esp-wifi", features = ["esp32c3", "e
 esp-alloc = "0.3.0"
 postcard = "1.0.4"
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+
 [profile.dev.package.esp-wifi]
 opt-level = 3
 
