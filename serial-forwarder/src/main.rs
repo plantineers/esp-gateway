@@ -66,7 +66,7 @@ impl From<SensorData> for ServerData {
 #[tokio::main]
 async fn main() {
     let mut binding = Command::new("espmonitor");
-    let mut cmd = binding.arg("/dev/ttyUSB0");
+    let cmd = binding.arg("/dev/ttyUSB0");
     cmd.stdout(Stdio::piped());
     let mut child = cmd.spawn().unwrap();
     let stdout = child.stdout.take().unwrap();
