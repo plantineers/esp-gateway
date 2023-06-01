@@ -1,4 +1,7 @@
+use std::process::Stdio;
+use tokio::{io::AsyncBufReadExt, task};
 use serde::{Deserialize, Serialize};
+use tokio::{process::Command, io::BufReader};
 #[derive(Deserialize, Serialize, Debug)]
 struct SensorData {
     controller: [char; 32],
@@ -59,9 +62,31 @@ impl From<SensorData> for ServerData {
     }
 }
 
+/// Spawn an espmonitor and monitor it's output. When it outputs data, publish it to the server
 #[tokio::main]
 async fn main() {
-    println!("Hello, world!");
+    let mut binding = Command::new("espmonitor");
+    let mut cmd = binding.arg("/dev/ttyUSB0");
+    cmd.stdout(Stdio::piped());
+    let mut child = cmd.spawn().unwrap();
+    let stdout = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout).lines();
+
+    while let Some(line) = reader.next_line().await.unwrap() {
+        if line.starts_with("Decoded:") {
+            let data: SensorData = serde_json::from_str(&line[8..]).unwrap();
+            task::spawn(async move {
+                // For efficiencys sake we could use a single client for all requests, but that would involve an Arc<Mutex<>> and the gain is too little to justify the complexity
+                let mut client = reqwest::Client::new();
+                match publish_data(&mut client, data).await {
+                    Ok(_) => println!("Published data"),
+                    Err(e) => println!("Error publishing data: {}", e),
+                }
+            });
+        }
+    }
+
+
 }
 
 async fn publish_data(client: &mut reqwest::Client, data: SensorData) -> reqwest::Result<()>{
