@@ -2,12 +2,12 @@ use std::process::Stdio;
 use tokio::{io::AsyncBufReadExt, task};
 use serde::{Deserialize, Serialize};
 use tokio::{process::Command, io::BufReader};
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 struct SensorData {
     controller: [char; 32],
     sensors: Vec<Data>,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Data {
     r#type: String,
     value: f32,
@@ -47,12 +47,12 @@ impl From<SensorData> for ServerData {
             server_data.data.push(ServerDataEntry {
                 /// We have to insert '-' into the UUID
                 controller: format!(
-                    "{:?}-{:?}-{:?}-{:?}-{:?}",
-                    &data.controller[0..8],
-                    &data.controller[8..12],
-                    &data.controller[12..16],
-                    &data.controller[16..20],
-                    &data.controller[20..32]
+                    "{}-{}-{}-{}-{}",
+                    &data.controller[0..8].iter().collect::<String>(),
+                    &data.controller[8..12].iter().collect::<String>(),
+                    &data.controller[12..16].iter().collect::<String>(),
+                    &data.controller[16..20].iter().collect::<String>(),
+                    &data.controller[20..32].iter().collect::<String>(),
                 ),
                 sensor: sensor.r#type,
                 value: sensor.value,
@@ -78,8 +78,9 @@ async fn main() {
             task::spawn(async move {
                 // For efficiencys sake we could use a single client for all requests, but that would involve an Arc<Mutex<>> and the gain is too little to justify the complexity
                 let mut client = reqwest::Client::new();
-                match publish_data(&mut client, data).await {
-                    Ok(_) => println!("Published data"),
+                let server_data = data.into();
+                match publish_data(&mut client, &server_data).await {
+                    Ok(_) => println!("Published data {:?}", server_data),
                     Err(e) => println!("Error publishing data: {}", e),
                 }
             });
@@ -89,12 +90,11 @@ async fn main() {
 
 }
 
-async fn publish_data(client: &mut reqwest::Client, data: SensorData) -> reqwest::Result<()>{
-    let server_data: ServerData = data.into();
+async fn publish_data(client: &mut reqwest::Client, data: &ServerData) -> reqwest::Result<()>{
     let res = client.post(format!("{}sensor-data", env!("ENDPOINT").to_string()))
         .header("Content-Type", "application/json")
         .header("Authentication", format!("Basic {}", env!("AUTH").to_string())) 
-        .json(&server_data)
+        .json(data)
         .send()
         .await?;
     res.error_for_status()?;
