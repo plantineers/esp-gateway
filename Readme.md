@@ -2,11 +2,20 @@
 
 This is a simple gateway to forward data from ESP-Now to http for the Project PlantBuddy. It runs on an ESP32C3.
 
+## Requirements
+- [Rustup](https://rustup.rs/)
+
 ## Setup
 
+### esp-firmware
 1. Install espflash
-2. Switch to Rust nightly using `rustup override set nightly`
-3. Run `cargo run --release` to build and flash the firmware
+2. `cd esp-firmware`
+3. Switch to Rust nightly using `rustup override set nightly`
+4. Run `cargo run --release` to build and flash the firmware
+
+### serial-forwarder
+1. `cd serial-forwarder`
+2. `cargo run --release` to build and run the serial-forwarder
 
 ## Adapting for your own use case
 
