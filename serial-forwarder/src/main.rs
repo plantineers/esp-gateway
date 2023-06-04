@@ -74,11 +74,16 @@ async fn main() {
 
     while let Some(line) = reader.next_line().await.unwrap() {
         if line.starts_with("Decoded:") {
-            let data: SensorData = serde_json::from_str(&line[8..]).unwrap();
+            let data: Result<SensorData, serde_json::Error> = serde_json::from_str(&line[8..]);
+            // We do not want to block on network requests 
+            if data.is_err() {
+                println!("Error decoding data: {}", data.err().unwrap());
+                continue;
+            }
             task::spawn(async move {
                 // For efficiencys sake we could use a single client for all requests, but that would involve an Arc<Mutex<>> and the gain is too little to justify the complexity
                 let mut client = reqwest::Client::new();
-                let server_data = data.into();
+                let server_data = data.unwrap().into();
                 match publish_data(&mut client, &server_data).await {
                     Ok(_) => println!("Published data {:?}", server_data),
                     Err(e) => println!("Error publishing data: {}", e),

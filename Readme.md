@@ -15,16 +15,14 @@ This is a simple gateway to forward data from ESP-Now to http for the Project Pl
 
 ### serial-forwarder
 1. `cd serial-forwarder`
-2. `cargo run --release` to build and run the serial-forwarder
+2. Install espmonitor via `cargo install espmonitor`
+3. `cargo run --release` to build and run the serial-forwarder
 
 ## Adapting for your own use case
 
 If you want to reuse this code for your own use case, you need to change the following things:
 
-1. Change the data structures in `src/main.rs` to match your own data
-2. Encode the data sent by your other ESP using the rust postcard library
-3. Adapt serial-forwarder to your own use case
-
+Change the data structures in `esp-firmware/src/main.rs` and `serial-forwarder` to match your own data
 ## Example Output
 
 ![Example Output](example.png)
