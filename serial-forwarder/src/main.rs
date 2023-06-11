@@ -3,7 +3,7 @@ use tokio::{io::AsyncBufReadExt, task};
 use serde::{Deserialize, Serialize};
 use tokio::{process::Command, io::BufReader};
 #[derive(Clone, Deserialize, Serialize, Debug)]
-struct SensorData {
+pub struct SensorData {
     controller: [char; 32],
     sensors: Vec<Data>,
 }
@@ -13,6 +13,7 @@ pub struct Data {
     value: f32,
 }
 
+/// The Server Data format differs from the SensorData format, which is why we need to convert it. This is the format the server expects.
 /// Since the server doesnt rewrite the request we have to rewrite it into their format here
 /// The format is as follows:
 /// ```json
@@ -62,7 +63,7 @@ impl From<SensorData> for ServerData {
     }
 }
 
-/// Spawn an espmonitor and monitor it's output. When it outputs data, publish it to the server
+/// Spawn an espmonitor and monitor it's output. When it outputs data, publish it to the server in the server data format
 #[tokio::main]
 async fn main() {
     let mut binding = Command::new("espmonitor");
@@ -96,9 +97,9 @@ async fn main() {
 }
 
 async fn publish_data(client: &mut reqwest::Client, data: &ServerData) -> reqwest::Result<()>{
-    let res = client.post(format!("{}sensor-data", env!("ENDPOINT").to_string()))
+    let res = client.post(format!("{}sensor-data", std::env::var("ENDPOINT").expect("You need to set the ENDPOINT Environment variable to the server address(e.g. http://localhost/v1/").to_string()))
         .header("Content-Type", "application/json")
-        .header("Authentication", format!("Basic {}", env!("AUTH").to_string())) 
+        .header("Authentication", format!("Basic {}", std::env::var("AUTH").expect("You need to set the AUTH environment to a Basic Auth Value").to_string()))
         .json(data)
         .send()
         .await?;

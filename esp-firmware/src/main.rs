@@ -1,3 +1,4 @@
+//! This is the minimal firmware for an esp32c3 acting simply as a reciver for the esp-now protocol and decoding the data via postcard.
 #![no_std]
 #![no_main]
 
@@ -19,12 +20,14 @@ use hal::systimer::SystemTimer;
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
+/// The struct for our sensor data. Has to be the same as on the sender side and can take a variable amount of sensors.
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 struct SensorData {
     controller: [char; 32],
     sensors: Vec<Data>,
 }
 
+/// Single sensor data struct.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Data {
     r#type: String,
