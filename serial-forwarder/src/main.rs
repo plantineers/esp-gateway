@@ -99,7 +99,7 @@ async fn main() {
 async fn publish_data(client: &mut reqwest::Client, data: &ServerData) -> reqwest::Result<()>{
     let res = client.post(format!("{}sensor-data", std::env::var("ENDPOINT").expect("You need to set the ENDPOINT Environment variable to the server address(e.g. http://localhost/v1/").to_string()))
         .header("Content-Type", "application/json")
-        .header("Authentication", format!("Basic {}", std::env::var("AUTH").expect("You need to set the AUTH environment to a Basic Auth Value").to_string()))
+        .header("Authorization", format!("Basic {}", std::env::var("AUTH").expect("You need to set the AUTH environment to a Basic Auth Value").to_string()))
         .json(data)
         .send()
         .await?;
